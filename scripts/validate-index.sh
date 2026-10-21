@@ -12,6 +12,7 @@ fi
 echo "index.json parses."
 
 status=0
+# Every path index.json names: the skill directory, and a reference subtree if declared.
 while IFS= read -r path; do
   if [ -e "$path" ]; then
     echo "  ok      $path"
@@ -19,7 +20,7 @@ while IFS= read -r path; do
     echo "  MISSING $path" >&2
     status=1
   fi
-done < <(jq -r '.skills[].path' index.json)
+done < <(jq -r '.skills[] | .path, (select(.reference) | .path + "/" + .reference.path)' index.json)
 
 if [ "$status" -ne 0 ]; then
   echo "index.json names paths that do not exist." >&2

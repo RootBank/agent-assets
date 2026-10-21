@@ -18,6 +18,7 @@ skills/<id>/
   SKILL.md                       # the skill itself
   claude/<path-under-.claude>    # files that install into the target repo's .claude/
   cursor/<path-under-.cursor>    # files that install into the target repo's .cursor/
+  reference/                     # optional: docs that install alongside the skill
 scripts/validate-index.sh
 ```
 
@@ -25,6 +26,10 @@ scripts/validate-index.sh
 in the repo it installs into, so an installer copies them across without a lookup table —
 `skills/build-collection-module/claude/commands/build-from-spec.md` becomes
 `.claude/commands/build-from-spec.md`. A skill only carries subtrees for the targets it lists.
+
+`reference/` holds documentation the skill points at. It installs to the path named by
+`reference.installs_to`, so skill and reference land together as one versioned unit — a skill
+whose steps cite a doc is only useful if that doc arrives with it.
 
 `index.json` is served anonymously from raw GitHub:
 
@@ -47,7 +52,11 @@ The repo is public precisely so this works without a token — partners clone
       "path": "skills/build-collection-module",
       "targets": ["claude", "cursor"],
       "applies_to": "collection-module",
-      "description": "Build a collection module from a provider spec, API doc, PDF, or URL."
+      "description": "Build a collection module from a provider spec, API doc, PDF, or URL.",
+      "reference": {
+        "path": "reference",
+        "installs_to": "collection_module/docs"
+      }
     }
   ]
 }
@@ -62,6 +71,7 @@ The repo is public precisely so this works without a token — partners clone
 | `targets` | Which agents the skill ships files for — `claude`, `cursor`. Each value must have a matching subtree in the skill directory. |
 | `applies_to` | Which kind of repo the skill belongs in. See below. |
 | `description` | One line, shown when listing available skills. |
+| `reference` | Optional. `path` is the subtree inside the skill directory; `installs_to` is where it lands in the target repo. CI fails if `path` does not exist. |
 
 ## How `applies_to` scopes installs
 
@@ -84,7 +94,8 @@ means adding a value, not a repo.
    should reach for the skill, not only what it does — that line is what the agent reads to
    decide.
 2. Add any target-specific files under `claude/` or `cursor/`, at the path they should take in
-   the repo they install into.
+   the repo they install into. Put any docs the skill cites under `reference/` and declare
+   where they install.
 3. Add an entry to `index.json`. Start the skill's `version` at `1.0.0`, and list only the
    targets you actually shipped a subtree for.
 4. Run `./scripts/validate-index.sh`.
@@ -93,6 +104,20 @@ means adding a value, not a repo.
 Paths inside a skill's files are resolved in the **target** repo, not here. A skill that links
 to `collection_module/docs/…` is pointing at the repo it installs into; those links will not
 resolve when browsing this catalog, and that is expected.
+
+## `build-collection-module/reference/` is a snapshot
+
+The 20 files under `skills/build-collection-module/reference/` are a point-in-time copy of
+`collection_module/docs/` from `RootBank/blank_starter_template_v2` at `main`. They are **not**
+yet reconciled against [docs.rootplatform.com](https://docs.rootplatform.com), which is the
+public source of truth for platform behaviour. Where the two disagree, the docs site wins.
+
+Two files are deliberately absent — `SPEC-TEMPLATE.md` and `14-SELF-REVIEW.md` — because open
+template PRs are rewriting them. Links to those two inside the snapshot do not resolve yet; they
+arrive with the rest of the template promotion. Until then, read them in the template repo.
+
+Treat the snapshot as read-only: fix the template first, then re-copy, so the two do not drift
+in opposite directions.
 
 ## Changing a skill
 
