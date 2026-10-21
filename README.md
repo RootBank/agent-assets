@@ -13,10 +13,18 @@ updated again. Fetching from a catalog means an improvement reaches every repo t
 ## Layout
 
 ```
-index.json              # the catalog — the only file an installer must read
-skills/<id>/SKILL.md    # one directory per skill
+index.json                       # the catalog — the only file an installer must read
+skills/<id>/
+  SKILL.md                       # the skill itself
+  claude/<path-under-.claude>    # files that install into the target repo's .claude/
+  cursor/<path-under-.cursor>    # files that install into the target repo's .cursor/
 scripts/validate-index.sh
 ```
+
+`SKILL.md` is the skill. The `claude/` and `cursor/` subtrees mirror the path each file takes
+in the repo it installs into, so an installer copies them across without a lookup table —
+`skills/build-collection-module/claude/commands/build-from-spec.md` becomes
+`.claude/commands/build-from-spec.md`. A skill only carries subtrees for the targets it lists.
 
 `index.json` is served anonymously from raw GitHub:
 
@@ -34,12 +42,12 @@ The repo is public precisely so this works without a token — partners clone
   "version": 1,
   "skills": [
     {
-      "id": "example-skill",
+      "id": "build-collection-module",
       "version": "1.0.0",
-      "path": "skills/example-skill",
+      "path": "skills/build-collection-module",
       "targets": ["claude", "cursor"],
-      "applies_to": "any",
-      "description": "Worked example of a catalog skill."
+      "applies_to": "collection-module",
+      "description": "Build a collection module from a provider spec, API doc, PDF, or URL."
     }
   ]
 }
@@ -48,10 +56,10 @@ The repo is public precisely so this works without a token — partners clone
 | Field | Meaning |
 | --- | --- |
 | `version` (top level) | Schema version of the catalog itself. Bump only on a breaking change to the file's shape. |
-| `id` | Stable identifier. Matches the skill directory name and the `name` in its `SKILL.md`. Never reuse an id for a different skill. |
+| `id` | Stable identifier, and the skill's directory name. Never reuse an id for a different skill. |
 | `version` (per skill) | Semver for the skill's content. Bump on every change so installers can tell what is new. |
 | `path` | Repo-relative path to the skill directory. CI fails if it does not exist. |
-| `targets` | Which agents the skill is written for — `claude`, `cursor`. An installer writes it only where the target is in use. |
+| `targets` | Which agents the skill ships files for — `claude`, `cursor`. Each value must have a matching subtree in the skill directory. |
 | `applies_to` | Which kind of repo the skill belongs in. See below. |
 | `description` | One line, shown when listing available skills. |
 
@@ -71,12 +79,20 @@ means adding a value, not a repo.
 
 ## Adding a skill
 
-1. Copy `skills/example-skill/` to `skills/<your-id>/`.
-2. Rewrite `SKILL.md` — set `name` to your id, and write a `description` that says **when**
-   an agent should reach for the skill, not only what it does.
-3. Add an entry to `index.json`. Start the skill's `version` at `1.0.0`.
+1. Create `skills/<your-id>/SKILL.md`. Open it with YAML frontmatter carrying at least `name`
+   (matching the directory) and `description`. Write the `description` to say **when** an agent
+   should reach for the skill, not only what it does — that line is what the agent reads to
+   decide.
+2. Add any target-specific files under `claude/` or `cursor/`, at the path they should take in
+   the repo they install into.
+3. Add an entry to `index.json`. Start the skill's `version` at `1.0.0`, and list only the
+   targets you actually shipped a subtree for.
 4. Run `./scripts/validate-index.sh`.
 5. Open a PR. CI runs the same check.
+
+Paths inside a skill's files are resolved in the **target** repo, not here. A skill that links
+to `collection_module/docs/…` is pointing at the repo it installs into; those links will not
+resolve when browsing this catalog, and that is expected.
 
 ## Changing a skill
 

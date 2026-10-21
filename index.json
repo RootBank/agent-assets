@@ -2,12 +2,12 @@
   "version": 1,
   "skills": [
     {
-      "id": "example-skill",
+      "id": "build-collection-module",
       "version": "1.0.0",
-      "path": "skills/example-skill",
+      "path": "skills/build-collection-module",
       "targets": ["claude", "cursor"],
-      "applies_to": "any",
-      "description": "Worked example of a catalog skill — copy it as the starting point for a new one."
+      "applies_to": "collection-module",
+      "description": "Build a collection module from a provider spec, API doc, PDF, or URL — scaffold, implement, wire in, verify."
     }
   ]
 }
