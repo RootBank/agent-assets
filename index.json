@@ -5,22 +5,9 @@
       "id": "example-skill",
       "version": "1.0.0",
       "path": "skills/example-skill",
-      "targets": [
-        "claude",
-        "cursor"
-      ],
+      "targets": ["claude", "cursor"],
       "applies_to": "any",
       "description": "Worked example of a catalog skill — copy it as the starting point for a new one."
-    },
-    {
-      "id": "ghost",
-      "version": "1.0.0",
-      "path": "skills/does-not-exist",
-      "targets": [
-        "claude"
-      ],
-      "applies_to": "any",
-      "description": "deliberately broken"
     }
   ]
 }
