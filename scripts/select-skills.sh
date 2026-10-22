@@ -40,6 +40,11 @@ else
   exit 0
 fi
 
+# Report the kind on stderr. stdout stays the id list, so callers are unaffected, but "no skills"
+# can now be told apart from "no kind". Without this, a product module yielding nothing looks
+# identical to a repo whose kind could not be read, and a broken detector reads as a working filter.
+echo "kind: $kind" >&2
+
 # A skill's kind is the path segment under skills/. Nothing else decides it.
 jq -r --arg kind "$kind" '
   .skills[]
