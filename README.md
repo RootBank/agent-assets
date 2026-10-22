@@ -120,9 +120,14 @@ directory under `skills/` is not a declared kind.
 
 1. Decide which repo kind it is for, and create `skills/<kind>/<your-id>/SKILL.md`. If it would
    suit two kinds, it is two skills: the guidance that differs is the whole value. Open the file
-   with YAML frontmatter carrying at least `name` (matching the directory) and `description`. Write
-   the `description` to say **when** an agent should reach for the skill, not only what it does —
-   that line is what the agent reads to decide.
+   with YAML frontmatter carrying at least `name` and `description`. Write the `description` to say
+   **when** an agent should reach for the skill, not only what it does — that line is what the agent
+   reads to decide.
+
+   The directory name is the catalog `id`. The frontmatter `name` is what the agent invokes the
+   skill by, and the two may differ: `build-collection-module` ships a `SKILL.md` named
+   `build-from-spec`, because that is what the skill is called in the template it came from. Keep
+   them the same for a new skill; a difference should have a reason.
 2. Add any target-specific files under `claude/` or `cursor/`, at the path they should take in
    the repo they install into. Put any docs the skill cites under `reference/` and declare
    where they install.
