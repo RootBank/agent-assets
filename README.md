@@ -10,10 +10,49 @@ version landed. Re-running the installer updates them in place.
 Before this repo, skills were copied into `blank_starter_template_v2` at clone time and never
 updated again. Fetching from a catalog means an improvement reaches every repo that installs it.
 
+## Installing
+
+From inside a Root module repo:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/RootBank/agent-assets/main/install.sh | bash
+```
+
+Add `| bash -s -- --dry-run` to see every file it would write without writing any of them.
+
+It reads the repo's kind, installs the skills for that kind and nothing else, and records what
+landed in `.root/agent-manifest.json`. Re-run it to update: each skill's recorded version is
+compared against `index.json`, and only the ones that differ are rewritten. It reports
+`N installed · M updated · K up to date`.
+
+Where files land, for one skill:
+
+| From the catalog | To the repo |
+| --- | --- |
+| `SKILL.md` | `.claude/skills/<id>/SKILL.md` |
+| `claude/<path>` | `.claude/<path>` |
+| `cursor/<path>` | `.cursor/<path>` |
+| `reference/<path>` | `<reference.installs_to>/<path>` |
+
+Everything is written relative to the repo root. The kind, though, is read from
+`.root-config.json`, which is **not** necessarily at the root: `rp` reads it from the module
+directory, and a repo cloned from `blank_starter_template_v2` keeps it at
+`collection_module/.root-config.json` while `.claude/`, `.cursor/` and `collection_module/docs/`
+sit at the root. So the installer looks for it at the root, then one level down. A repo with two
+of them has no established kind, and installs nothing.
+
+Files are overwritten, never deleted first. A reference tree installs alongside a repo's own
+files — `collection_module/docs/` holds the module's docs too — so clearing a target directory
+would destroy work that is not the installer's. One consequence: a file dropped between two
+versions of a skill stays on disk until someone removes it.
+
+`install.sh` needs `curl`, `tar`, `jq` and `git`, and refuses to run outside a git repo.
+
 ## Layout
 
 ```
 index.json                           # the catalog — the only file an installer must read
+install.sh                           # installs the matching skills into a module repo
 skills/<kind>/<id>/
   SKILL.md                           # the skill itself
   claude/<path-under-.claude>        # files that install into the target repo's .claude/
@@ -22,6 +61,7 @@ skills/<kind>/<id>/
 scripts/select-skills.sh             # which skills install into a given repo
 scripts/validate-index.sh            # the structural check CI runs
 tests/selection.test.sh
+tests/install.test.sh
 tests/fixtures/<kind>/               # repo fixtures the selection test runs against
 ```
 
@@ -96,8 +136,11 @@ One deliberate difference: `rp` keys off `productModuleKey` alone, so a config c
 reads as a product module there. Here it is undetermined and installs nothing, because guessing
 wrong in that direction is exactly the misdelivery this catalog exists to stop.
 
-`scripts/select-skills.sh <repo>` prints the skills that install into that repo: the ones whose
-`<kind>` path segment matches, and nothing else.
+`scripts/select-skills.sh <dir>` prints the skills that install into the repo whose
+`.root-config.json` is in `<dir>`: the ones whose `<kind>` path segment matches, and nothing else.
+`install.sh` calls that script rather than carrying its own copy of the rule — two filters means
+two behaviours, and the one that drifts is the one that leaks collection-module context into a
+product module.
 
 **A skill is never installable just because it is in this repo.** It installs because its path says
 which kind it is for. That is deliberate: shipping collection-module context into a product module
@@ -105,10 +148,13 @@ teaches an agent to build the wrong thing against the wrong contracts, and the a
 notice.
 
 There is **no `--all` and no `--force`**. A bypass that exists gets used, usually by someone in a
-hurry who is sure this once is fine.
+hurry who is sure this once is fine. `install.sh` rejects both flags by name rather than ignoring
+them, so nobody is left wondering whether it silently did something.
 
 Selection **fails closed**. A repo with no `.root-config.json`, with unreadable JSON, or claiming
-both kinds at once gets nothing. An undetermined kind is not a reason to guess.
+both kinds at once gets nothing. An undetermined kind is not a reason to guess. `install.sh` exits
+non-zero in that case and names which of the three it hit; a repo that is correctly identified and
+simply has no skills for its kind exits zero, because zero is the right answer.
 
 ### Adding a kind
 
@@ -135,8 +181,8 @@ directory under `skills/` is not a declared kind.
    targets you actually shipped a subtree for. Do **not** write an `applies_to` field: the kind is
    derived from the path, and a second copy of the same fact is just a chance for the two to
    disagree. CI rejects one that disagrees.
-4. Run `./scripts/validate-index.sh` and `./tests/selection.test.sh`.
-5. Open a PR. CI runs both.
+4. Run `./scripts/validate-index.sh`, `./tests/selection.test.sh` and `./tests/install.test.sh`.
+5. Open a PR. CI runs all three.
 
 Paths inside a skill's files are resolved in the **target** repo, not here. A skill that links
 to `collection_module/docs/…` is pointing at the repo it installs into; those links will not
