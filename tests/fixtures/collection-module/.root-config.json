@@ -1,0 +1,6 @@
+{
+  "collectionModuleKey": "example_collection_module",
+  "collectionModuleName": "Example Collection Module",
+  "organizationId": "00000000-0000-0000-0000-000000000001",
+  "host": "http://127.0.0.1:4000"
+}

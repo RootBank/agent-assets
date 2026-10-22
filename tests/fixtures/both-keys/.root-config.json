@@ -1,0 +1,6 @@
+{
+  "collectionModuleKey": "confused_module",
+  "productModuleKey": "confused_module",
+  "organizationId": "00000000-0000-0000-0000-000000000001",
+  "host": "http://127.0.0.1:4000"
+}
