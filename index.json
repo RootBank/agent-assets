@@ -1,12 +1,12 @@
 {
   "version": 1,
+  "kinds": ["collection-module", "product-module"],
   "skills": [
     {
       "id": "build-collection-module",
       "version": "1.0.0",
-      "path": "skills/build-collection-module",
+      "path": "skills/collection-module/build-collection-module",
       "targets": ["claude", "cursor"],
-      "applies_to": "collection-module",
       "description": "Build a collection module from a provider spec, API doc, PDF, or URL — scaffold, implement, wire in, verify.",
       "reference": {
         "path": "reference",

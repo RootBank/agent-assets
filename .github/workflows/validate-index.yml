@@ -1,4 +1,4 @@
-name: Validate index.json
+name: Validate catalog
 
 on:
   push:
@@ -11,3 +11,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate index.json
         run: ./scripts/validate-index.sh
+      - name: Skill selection by repo kind
+        run: ./tests/selection.test.sh
