@@ -86,6 +86,16 @@ A Root repo has a kind, read from the key in its `.root-config.json`:
 | `collectionModuleKey` | `collection-module` |
 | `productModuleKey` | `product-module` |
 
+This is the same test the Root CLI applies, not a parallel invention:
+`root-platform-cli/src/domain/root-config.ts:48` defines
+`isProductModuleConfig = (config) => !!config.productModuleKey`, and `collectionModuleKey` is the
+collection-module marker in that repo's fixture at
+`test-modules/collection-modules/example_module/.root-config.json`.
+
+One deliberate difference: `rp` keys off `productModuleKey` alone, so a config carrying both keys
+reads as a product module there. Here it is undetermined and installs nothing, because guessing
+wrong in that direction is exactly the misdelivery this catalog exists to stop.
+
 `scripts/select-skills.sh <repo>` prints the skills that install into that repo: the ones whose
 `<kind>` path segment matches, and nothing else.
 

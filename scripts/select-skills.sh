@@ -16,7 +16,18 @@ CONFIG="$REPO/.root-config.json"
 [ -f "$CONFIG" ] || exit 0
 jq empty "$CONFIG" 2>/dev/null || exit 0
 
-# The repo kind comes from the key present in .root-config.json. Exactly one must match.
+# The repo kind comes from the key present in .root-config.json. This matches how the Root CLI
+# itself decides: root-platform-cli/src/domain/root-config.ts:48 defines
+#   isProductModuleConfig = (config) => !!config.productModuleKey
+# and collectionModuleKey is the collection-module marker, per that repo's fixture at
+# test-modules/collection-modules/example_module/.root-config.json. Cited so the next reader
+# does not re-derive it.
+#
+# One deliberate difference: rp keys off productModuleKey alone, so a config carrying both keys
+# reads as a product module there. Here it is undetermined and yields nothing. Guessing wrong in
+# this direction hands collection-module context to a product module, which is the whole thing
+# this catalog is built to prevent.
+# Exactly one key must match.
 kind=""
 has_cm=$(jq -r 'has("collectionModuleKey")' "$CONFIG")
 has_pm=$(jq -r 'has("productModuleKey")' "$CONFIG")
